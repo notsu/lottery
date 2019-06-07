@@ -1,0 +1,18 @@
+version: '3.5'
+
+services:
+  lottery:
+    container_name: lottery
+    image: golang:1.12.5-alpine3.9
+    ports:
+      - 80:8080
+    depends_on:
+      - elasticsearch
+
+  elasticsearch:
+    image: elasticsearch:6.8.0
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      discovery.type: single-node
