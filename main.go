@@ -16,13 +16,8 @@ type Lottery struct {
 	Seller string `faker:"name" json:"seller,omitempty"`
 }
 
-// History struct
-type History struct {
-	Data []Lottery `json:"data"`
-}
-
-// SearchResponse struct
-type SearchResponse struct {
+// LotteryResponse struct
+type LotteryResponse struct {
 	Data []Lottery `json:"data"`
 }
 
@@ -45,6 +40,19 @@ func main() {
 		return c.String(http.StatusOK, "Hello, world")
 	})
 
+	e.GET("/lottery", func(c echo.Context) error {
+		ll := []Lottery{}
+		for i := 0; i < 10; i++ {
+			l := Lottery{}
+			_ = faker.FakeData(&l)
+			ll = append(ll, l)
+		}
+
+		return c.JSON(http.StatusOK, LotteryResponse{
+			Data: ll,
+		})
+	})
+
 	e.GET("/lottery/search", func(c echo.Context) error {
 		l := Lottery{}
 		err := faker.FakeData(&l)
@@ -52,7 +60,7 @@ func main() {
 			log.Fatal("Unable to create fake data")
 		}
 
-		return c.JSON(http.StatusOK, SearchResponse{
+		return c.JSON(http.StatusOK, LotteryResponse{
 			Data: []Lottery{l},
 		})
 	})
@@ -77,7 +85,7 @@ func main() {
 			ll = append(ll, l)
 		}
 
-		return c.JSON(http.StatusOK, History{
+		return c.JSON(http.StatusOK, LotteryResponse{
 			Data: ll,
 		})
 	})
