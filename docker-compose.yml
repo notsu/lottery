@@ -3,11 +3,17 @@ version: '3.5'
 services:
   lottery:
     container_name: lottery
-    image: golang:1.12.5-alpine3.9
+    build:
+      context: .
+      dockerfile: build/Dockerfile.local
+    volumes:
+      - ./:/src/go
     ports:
       - 80:8080
     depends_on:
       - elasticsearch
+    working_dir: /src/go
+    command: reflex -c reflex.conf
 
   elasticsearch:
     image: elasticsearch:6.8.0

@@ -4,42 +4,83 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/graphql-go/graphql"
-	"github.com/graphql-go/handler"
+	"github.com/bxcodec/faker"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
 
+// Lottery struct
+type Lottery struct {
+	Number string `faker:"cc_number" json:"number"`
+	Period string `faker:"month_name" json:"period"`
+	Seller string `faker:"name" json:"seller,omitempty"`
+}
+
+// History struct
+type History struct {
+	Data []Lottery `json:"data"`
+}
+
+// SearchResponse struct
+type SearchResponse struct {
+	Data []Lottery `json:"data"`
+}
+
+// NewResponse struct
+type NewResponse struct {
+	Acknowledge bool `json:"acknowledge"`
+}
+
 func main() {
-	// Schema
-	fields := graphql.Fields{
-		"search": &graphql.Field{
-			Name:        "Search lottery",
-			Description: "Full-text searching for lottery",
-			Type:        graphql.String,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return "Found: 443", nil
-			},
-		},
-	}
-	rootQuery := graphql.ObjectConfig{
-		Name:   "RootQuery",
-		Fields: fields,
-	}
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	schemaConfig := graphql.SchemaConfig{
-		Query: graphql.NewObject(rootQuery),
-	}
-	schema, err := graphql.NewSchema(schemaConfig)
-	if err != nil {
-		log.Fatalf("failed to create new schema, error: %v", err)
-	}
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+	}))
 
-	h := handler.New(&handler.Config{
-		Schema:     &schema,
-		Pretty:     true,
-		GraphiQL:   false,
-		Playground: true,
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, world")
 	})
 
-	http.Handle("/graphql", h)
-	http.ListenAndServe(":8080", nil)
+	e.GET("/lottery/search", func(c echo.Context) error {
+		l := Lottery{}
+		err := faker.FakeData(&l)
+		if err != nil {
+			log.Fatal("Unable to create fake data")
+		}
+
+		return c.JSON(http.StatusOK, SearchResponse{
+			Data: []Lottery{l},
+		})
+	})
+
+	e.POST("/lottery/new", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, NewResponse{
+			Acknowledge: true,
+		})
+	})
+
+	e.POST("/register", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, NewResponse{
+			Acknowledge: true,
+		})
+	})
+
+	e.GET("/history", func(c echo.Context) error {
+		ll := []Lottery{}
+		for i := 0; i < 10; i++ {
+			l := Lottery{}
+			_ = faker.FakeData(&l)
+			ll = append(ll, l)
+		}
+
+		return c.JSON(http.StatusOK, History{
+			Data: ll,
+		})
+	})
+
+	e.Logger.Fatal(e.Start(":8080"))
 }
