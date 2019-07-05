@@ -11,9 +11,11 @@ import (
 
 // Lottery struct
 type Lottery struct {
-	Number string `faker:"cc_number" json:"number"`
-	Period string `faker:"month_name" json:"period"`
-	Seller string `faker:"name" json:"seller,omitempty"`
+	Number string  `faker:"cc_number" json:"number"`
+	Period string  `faker:"month_name" json:"period"`
+	Seller string  `faker:"name" json:"seller,omitempty"`
+	Set    float64 `faker:"amount" json:"set"`
+	Buyer  string  `faker:"name" json:"buyer,omitempty"`
 }
 
 // LotteryResponse struct
@@ -53,6 +55,19 @@ func main() {
 		})
 	})
 
+	e.GET("/inventory", func(c echo.Context) error {
+		ll := []Lottery{}
+		for i := 0; i < 10; i++ {
+			l := Lottery{}
+			_ = faker.FakeData(&l)
+			ll = append(ll, l)
+		}
+
+		return c.JSON(http.StatusOK, LotteryResponse{
+			Data: ll,
+		})
+	})
+
 	e.GET("/lottery/search", func(c echo.Context) error {
 		l := Lottery{}
 		err := faker.FakeData(&l)
@@ -62,6 +77,19 @@ func main() {
 
 		return c.JSON(http.StatusOK, LotteryResponse{
 			Data: []Lottery{l},
+		})
+	})
+
+	e.GET("/orders", func(c echo.Context) error {
+		ll := []Lottery{}
+		for i := 0; i < 10; i++ {
+			l := Lottery{}
+			_ = faker.FakeData(&l)
+			ll = append(ll, l)
+		}
+
+		return c.JSON(http.StatusOK, LotteryResponse{
+			Data: ll,
 		})
 	})
 
